@@ -1,10 +1,10 @@
-io.stdout:setvbuf("no")
+
 
 
 
 
 function love.load()
-
+    io.stdout:setvbuf("no")
     start = love.timer.getTime()
 
     winX = 1280
@@ -76,16 +76,29 @@ function love.load()
         bullet.accelerate = arg.accelerate or 0
         genBullet(bullet)
     end
+    
+    function spreadBullet(arg)
+        local bullet = {}
+        bullet = arg
+        for i=1, arg.num do
+            bullet.angle = bullet.initAngle + bullet.spreadAngle/bullet.num*i
+            genBullet(bullet)
+        end
+    end
 
+    function spreadAimBullet(arg)
+        print('empty function')
+    end
 
     enemies = {}
     function genEnemy(arg)
         local enemy = {}
         enemy.xPos = arg.xPos or winX/2
         enemy.yPos = arg.yPos or winY/5
-        enemy.radius = arg.radius or 24
+        enemy.radius = arg.radius or 48
+        enemy.healthMax = arg.healthMax or 500
+        enemy.health = arg.health or enemy.healthMax
 
-        enemy.health = arg.health or 500
 
         
         if arg.type == 'boss' then
@@ -130,6 +143,9 @@ function love.draw()
                 love.graphics.draw(heartTex, winX*0.8+40*i, 200)
             end
         end
+        
+
+
         --[[
         love.graphics.draw(
             pHitTex, player.xPos, player.yPos
@@ -142,7 +158,14 @@ function love.draw()
 
         for i, enemy in pairs(enemies) do
             love.graphics.setColor(0.8, 0.2, 0.2, 1)
+            love.graphics.circle('fill', enemy.xPos, enemy.yPos, 15)
+            love.graphics.setColor(0.8, 0.2, 0.2, 0.5)
             love.graphics.circle('fill', enemy.xPos, enemy.yPos, enemy.radius)
+
+            love.graphics.setColor(0.5,0.5,0.5,1)
+            love.graphics.rectangle('fill',0,winY-10,winX,10)
+            love.graphics.setColor(0.9,0.2,0.2,1)
+            love.graphics.rectangle('fill',0,winY-10,winX*(enemy.health/enemy.healthMax),10)
         end
 
         for i, bullet in pairs(bullets) do
@@ -166,7 +189,13 @@ function love.draw()
             love.graphics.print('You died...',winX/2,winY/2,0,3,3)
         end
     end
+    --print('something something')
+    
 
+
+
+    love.graphics.setColor(1, 1, 1, 1)
+    --love.graphics.print('time is ' .. tostring(love.timer.getTime()), winX/2, winY/2, 0, 2, 2)
 end
 
 function love.update(dTime)
@@ -182,19 +211,35 @@ function love.update(dTime)
         end
 
         if love.keyboard.isDown('left') then
-            player.xPos = player.xPos - player.speed*dTime
+            if player.xPos <= 0 then
+                player.xPos = 0
+            else
+                player.xPos = player.xPos - player.speed*dTime
+            end
         end
 
         if love.keyboard.isDown('right') then
+            if player.xPos >= winX then
+                player.xPos = winX
+            else
             player.xPos = player.xPos + player.speed*dTime
+            end
         end
 
         if love.keyboard.isDown('up') then
-            player.yPos = player.yPos - player.speed*dTime
+            if player.yPos <= 0 then
+                player.yPos = 0
+            else
+                player.yPos = player.yPos - player.speed*dTime
+            end
         end
 
         if love.keyboard.isDown('down') then
-            player.yPos = player.yPos + player.speed*dTime
+            if player.yPos >= winY then
+                player.yPos = winY
+            else
+                player.yPos = player.yPos + player.speed*dTime
+            end
         end
 
         if love.keyboard.isDown('z') then
@@ -261,6 +306,11 @@ function love.update(dTime)
             end
         end
 
+        --if enemy.health > 0 then
+          --  love.timer.getTime()
+
+        --end
+
         if stage.elapsedTime%2.5 < dTime then
             for i, enemy in pairs(enemies) do
                 aimBullet{speed=300,radius=45,xPos=enemy.xPos,yPos=enemy.yPos}
@@ -268,11 +318,11 @@ function love.update(dTime)
         end
         if (stage.elapsedTime+8)%2.5 < dTime then
             for i, enemy in pairs(enemies) do
-                for i=1, 24 do
-                    genBullet{speed=350,xPos=enemy.xPos,yPos=enemy.yPos,angle=2*math.pi/24*i}
-                end
+                spreadBullet{speed=350,xPos=enemy.xPos,yPos=enemy.yPos,num=24,spreadAngle=2*math.pi,initAngle=0}
             end
         end
+
+
 
 
 
@@ -284,7 +334,9 @@ function love.update(dTime)
 end
 
 function love.keypressed(key)
-
+    if key =='p' then
+        print('something has printed')
+    end
 
 
 
