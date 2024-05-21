@@ -47,14 +47,24 @@ function love.load()
         local bullet = {}
         bullet.xPos = arg.xPos or winX/2
         bullet.yPos = arg.yPos or winY/5*2
+        
         bullet.radius = arg.radius or 16
+        
         bullet.angle = arg.angle or math.pi/2
-        bullet.curveAngle = arg.curveAngle or 0
+        bullet.angular = arg.angular or 0
+        bullet.angularMax = arg.angularMax or 0
+        bullet.angularMin = arg.angularMin or 0
+        bullet.angularRate = arg.angularRate or 0
+        
         bullet.speed = arg.speed or 500
+        
         bullet.accelerateMin = arg.accelerateMin or 0
         bullet.accelerateMax = arg.accelerateMax or 0
         bullet.accelerate = arg.accelerate or 0
+        bullet.accelerateRate = arg.accelerateRate or 0
+        
         bullet.owner = arg.owner or 'enemy'
+        
         bullet.damage = arg.damage or 5
 
         bullet.timeoutMax = arg.timeoutMax or 0.5
@@ -64,16 +74,8 @@ function love.load()
 
     function aimBullet(arg)
         local aimAngle = math.pi + math.atan2((arg.yPos-player.yPos),(arg.xPos-player.xPos))
-        local bullet = {}
-        bullet.xPos = arg.xPos or winX/2
-        bullet.yPos = arg.yPos or winY/5*2
-        bullet.radius = arg.radius or 16
+        local bullet = arg
         bullet.angle = arg.angle or aimAngle
-        bullet.curveAngle = arg.curveAngle or 0
-        bullet.speed = arg.speed or 500
-        bullet.accelerateMin = arg.accelerateMin or 0
-        bullet.accelerateMax = arg.accelerateMax or 0
-        bullet.accelerate = arg.accelerate or 0
         genBullet(bullet)
     end
     
@@ -116,13 +118,13 @@ function love.load()
     end
     genEnemy{}
 
-    function moveObject(object)
-        --[[
-            enemy.centerX = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toX-enemy.initialX) + enemy.initialX
-            enemy.centerY = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toY-enemy.initialY) + enemy.initialY
-        --]]
-
-
+    function moveObject(object,xPos,yPos,type)
+        object.initX = object.xPos
+        object.initY = object.yPos
+        object.toX = object.toX
+        object.toY = object.toY
+        object.moveTime = 0
+        object.moving = true
     end
 
     function objCenter(object) return (object.xPos+object.width/2), (object.yPos+object.height/2) end
@@ -257,6 +259,22 @@ function love.update(dTime)
             if enemy.health <= 0 then
                 table.remove(enemies, enemyNum)
                 hasEnded = true
+            else
+                if enemy.moving then
+                    enemy.moveTime = enemy.moveTime + dTime
+                    enemy.xPos = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toX-enemy.initX) + enemy.initialX
+                    enemy.yPos = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toY-enemy.initY) + enemy.initialY
+
+                    if enemy.moveTime >= enemy.moveTimeMax then
+                        enemy.xPos = enemy.toX
+                        enemy.yPos  = enemy.toY
+                        enemy.moving = false
+                    end
+                end
+                        --[[
+            enemy.centerX = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toX-enemy.initialX) + enemy.initialX
+            enemy.centerY = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toY-enemy.initialY) + enemy.initialY
+        --]]
             end
         end
 
@@ -264,8 +282,8 @@ function love.update(dTime)
             local bulletNum = i
             local willRemove = false
 
-            bullet.xPos = bullet.xPos + math.cos(bullet.angle) * bullet.speed*dTime
-            bullet.yPos = bullet.yPos + math.sin(bullet.angle) * bullet.speed*dTime
+            bullet.xPos = bullet.xPos + math.cos(bullet.angle + bullet.angular*dTime) * bullet.speed*dTime
+            bullet.yPos = bullet.yPos + math.sin(bullet.angle + bullet.angular*dTime) * bullet.speed*dTime
 
             --if bullet outside window
             if bullet.xPos >= winX + bullet.radius or bullet.xPos <= -bullet.radius or bullet.yPos >= winY + bullet.radius or bullet.yPos <= -bullet.radius  then
