@@ -58,6 +58,16 @@ function love.load()
         
         bullet.speed = arg.speed or 500
         
+        bullet.toX = arg.toX or winX/2
+        bullet.toY = arg.toY or winY/2
+        bullet.initX = arg.initX or winX/2
+        bullet.initY = arg.initY or winY/2
+
+        bullet.moveTimeMax = arg.moveTime or 3
+        bullet.moveTime = arg.moveTime or bullet.moveTimeMax
+        bullet.moving = false
+
+
         bullet.accelerateMin = arg.accelerateMin or 0
         bullet.accelerateMax = arg.accelerateMax or 0
         bullet.accelerate = arg.accelerate or 0
@@ -101,6 +111,16 @@ function love.load()
         enemy.healthMax = arg.healthMax or 500
         enemy.health = arg.health or enemy.healthMax
 
+        enemy.toX = arg.toX or winX/2
+        enemy.toY = arg.toY or winY/2
+        enemy.initX = arg.initX or winX/2
+        enemy.initY = arg.initY or winY/2
+
+        enemy.moveTimeMax = arg.moveTime or 3
+        enemy.moveTime = arg.moveTime or enemy.moveTimeMax
+        enemy.moving = false
+
+
 
         
         if arg.type == 'boss' then
@@ -121,8 +141,8 @@ function love.load()
     function moveObject(object,xPos,yPos,type)
         object.initX = object.xPos
         object.initY = object.yPos
-        object.toX = object.toX
-        object.toY = object.toY
+        object.toX = xPos
+        object.toY = yPos
         object.moveTime = 0
         object.moving = true
     end
@@ -262,8 +282,8 @@ function love.update(dTime)
             else
                 if enemy.moving then
                     enemy.moveTime = enemy.moveTime + dTime
-                    enemy.xPos = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toX-enemy.initX) + enemy.initialX
-                    enemy.yPos = (-1/(1+math.e**(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toY-enemy.initY) + enemy.initialY
+                    enemy.xPos = (-1/(1+math.exp(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toX-enemy.initX) + enemy.initX
+                    enemy.yPos = (-1/(1+math.exp(-5+enemy.moveTime/enemy.moveTimeMax*10))+1) * (enemy.toY-enemy.initY) + enemy.initY
 
                     if enemy.moveTime >= enemy.moveTimeMax then
                         enemy.xPos = enemy.toX
@@ -354,6 +374,19 @@ end
 function love.keypressed(key)
     if key =='p' then
         print('something has printed')
+    end
+
+
+    if key =='a' then
+        for i, enemy in pairs(enemies) do
+            moveObject(enemy, winX/6,enemy.yPos,3)
+        end
+    end
+
+    if key =='d' then
+        for i, enemy in pairs(enemies) do
+            moveObject(enemy, winX*5/6,enemy.yPos,3)
+        end
     end
 
 
